@@ -31,7 +31,7 @@ Window:AddSlider({
     text = "Fling Strength",
     flag = "FlingStrength",
     min = 0,
-    max = 999999999990,
+    max = 9999,
     value = flingStrength,
     callback = function(value)
         flingStrength = value
