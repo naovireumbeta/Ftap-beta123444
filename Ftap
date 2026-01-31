@@ -1,0 +1,85 @@
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+-- Load external library
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/liebertsx/Tora-Library/main/src/librarynew", true))()
+
+-- Create UI window
+local Window = Library:CreateWindow("Ftap")
+
+-- Services
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local Debris = game:GetService("Debris")
+
+-- Config variables
+local FLING_VELOCITY_NAME = "FlingVelocity"
+local superFlingEnabled = true
+local flingStrength = 0
+
+-- UI Elements
+Window:AddToggle({
+    text = "Super Fling",
+    flag = "SuperFling",
+    callback = function(state)
+        superFlingEnabled = state
+        print("Super Fling:", state)
+    end,
+})
+
+Window:AddSlider({
+    text = "Fling Strength",
+    flag = "FlingStrength",
+    min = 0,
+    max = 999999999990,
+    value = flingStrength,
+    callback = function(value)
+        flingStrength = value
+        print("Strength set to:", value)
+    end,
+})
+
+Window:AddLabel({
+    text = "criador:@naovirebeta",
+    type = "label",
+})
+
+-- Initialize library
+Library:Init()
+
+-- Handle GrabParts being added
+Workspace.ChildAdded:Connect(function(child)
+    if child.Name == "GrabParts" then
+        local success, grabPart = pcall(function()
+            return child:WaitForChild("GrabPart", 2):WaitForChild("WeldConstraint", 2).Part1
+        end)
+
+        if not success or not grabPart then
+            return
+        end
+
+        local bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.Name = FLING_VELOCITY_NAME
+        bodyVelocity.Parent = grabPart
+
+        local connection
+        connection = child:GetPropertyChangedSignal("Parent"):Connect(function()
+            if child.Parent == nil then
+                if superFlingEnabled then
+                    print("Launched with power:", flingStrength)
+                    bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                    bodyVelocity.Velocity = Workspace.CurrentCamera.CFrame.LookVector * flingStrength
+                    Debris:AddItem(bodyVelocity, 1)
+                else
+                    bodyVelocity.MaxForce = Vector3.new(0, 0, 0)
+                    Debris:AddItem(bodyVelocity, 1)
+                    print("Launch cancelled")
+                end
+
+                if connection then
+                    connection:Disconnect()
+                end
+            end
+        end)
+    end
+end)
